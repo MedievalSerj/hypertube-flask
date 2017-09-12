@@ -1,12 +1,20 @@
 #!/usr/bin/env python
 import os
+import datetime
 from flask import Flask, url_for, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint
+
+from pprint import pprint
+from sqlalchemy.engine import Engine
+from sqlalchemy import event
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'data.sqlite')
 
 app = Flask(__name__)
+CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 
 db = SQLAlchemy(app)
@@ -70,7 +78,7 @@ class Movie(db.Model):
             'actors': self.actors,
             'country': self.country
         }
-        
+
 
 @app.route('/add', methods=['POST'])
 def add_movie():
@@ -90,13 +98,152 @@ def get_one(id):
 def search(start, stop):
     all = [m.get_search_item() for m in Movie.query.all()]
     return jsonify({'search_results': all[start:stop]})
+    # return jsonify({'search_results': all[start:stop]}), 200, {'Access-Control-Allow-Origin': '*'}
 
 
 @app.route('/watch/<int:id>')
 def watch(id):
     return jsonify(Movie.query.get_or_404(id).get_watch_item())
 
+
+class WatchedMovie(db.Model):
+    __tablename__ = 'watched_movies'
+    movie_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), index=True)
+    __table_args__ = (PrimaryKeyConstraint('movie_id', 'user_id', name='watched_movies_pk'),
+                      {})
     
+    def get_url(self):
+        return url_for('get_watched_movies', user_id=self.user_id, _external=True)
+    
+    def export_data(self):
+        return self.movie_id
+    
+    def import_data(self, data):
+        try:
+            self.movie_id = data['movie_id']
+            self.user_id = data['user_id']
+        except KeyError as e:
+            raise ValidationError('Invalid WatchMovie: missing ' + e.args[0])
+
+
+@app.route('/watched_movies', methods=['POST'])
+def add_watched_movie():
+    data = request.json
+    watched_movie = WatchedMovie.query.filter_by(user_id=data['user_id'], movie_id=data['movie_id']).first()
+    print('watched_movie = ' + str(watched_movie))
+    if watched_movie is None:
+        watched_movie = WatchedMovie()
+        watched_movie.import_data(request.json)
+        db.session.add(watched_movie)
+        db.session.commit()
+    return jsonify({}), 201
+
+
+@app.route('/watched_movies/<int:user_id>', methods=['GET'])
+def get_watched_movies(user_id):
+    watched_movies = WatchedMovie.query.filter_by(user_id=user_id).all()
+    result = [movie.export_data() for movie in watched_movies]
+    pprint(result)
+    return jsonify(result), 200
+
+
+@app.route('/is_watched/<int:user_id>/<int:movie_id>', methods=['GET'])
+def is_watched(user_id, movie_id):
+    movie = WatchedMovie.query.filter_by(user_id=user_id, movie_id=movie_id).first()
+    if movie is None:
+        msg = 'KO'
+    else:
+        msg = 'OK'
+    return jsonify({"is_watched": msg}), 200
+
+
+class Comment(db.Model):
+    __tablename__ = 'comments'
+    movie_id = db.Column(db.Integer, primary_key=True, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), index=True)
+    msg = db.Column(db.Text, nullable=False)
+    date_time = db.Column(db.DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+    
+    def get_url(self):
+        return url_for('get_all_comments', movie_id=self.movie_id)
+    
+    # def export_data(self):
+    #     return {
+    #         "comment_id": self.comment_id,
+    #         ""
+    #
+    #     }
+    
+    
+
+@app.route('/comments/<int:movie_id>', methods=['GET'])
+def get_all_comments(movie_id):
+    pass
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    login = db.Column(db.String(128), unique=True)
+    email = db.Column(db.String(128), unique=True)
+    avatar_url = db.Column(db.String(256))
+    passwd = db.Column(db.String(256))
+    first_name = db.Column(db.String(128))
+    last_name = db.Column(db.String(128))
+    join_date = db.Column(db.DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+    # watched_movies = db.relationship('WatchedMovie',  backref='user', lazy='dynamic',
+    #                                  cascade='all, delete-orphan')
+    watched_movies = db.relationship('WatchedMovie', backref=db.backref('user', lazy='joined'), lazy='dynamic',
+                                     cascade='all, delete-orphan')
+    
+    def get_url(self):
+        return url_for('get_user', user_id=self.user_id, _external=True)
+    
+    def export_data(self):
+        return {
+            'user_id': self.user_id,
+            'login': self.login,
+            'email': self.email,
+            'avatar_url': self.avatar_url,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'join_date': self.join_date.isoformat() + 'Z',
+            'watched_movies': url_for('get_watched_movies', user_id=self.user_id, _external=True)
+        }
+    
+    def import_data(self, data):
+        try:
+            self.login = data['login']
+            self.email = data['email']
+            self.first_name = data['first_name']
+            self.last_name = data['last_name']
+        except KeyError as e:
+            raise ValidationError('Invalid user: missing ' + e.args[0])
+
+
+@app.route('/user', methods=['POST'])
+def add_user():
+    user = User()
+    user.import_data(request.json)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({}), 201, {'Location': user.get_url()}
+
+
+@app.route('/user/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    user = User.query.get_or_404(user_id)
+    return jsonify(user.export_data())
+
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
 if __name__ == '__main__':
     db.create_all()
     movies = []
@@ -107,7 +254,7 @@ if __name__ == '__main__':
                 'title': 'Movie 1',
                 'year': 1968,
                 'rating': 100500,
-                'photo_url': '/static/movies/movie_1/movie_1.png',
+                'photo_url': 'http://localhost:5000/static/movies/movie_1/movie_1.png',
                 'movie_url': '/static/movies/movie_1/movie_1.mkv',
                 'subtitles_url': '/static/movies/movie_1/movie_1.srt',
                 'genre': 'Comedy',
@@ -121,7 +268,7 @@ if __name__ == '__main__':
                 'title': 'Movie 2',
                 'year': 1968,
                 'rating': 100500,
-                'photo_url': '/static/movies/movie_2/movie_2.png',
+                'photo_url': 'http://localhost:5000/static/movies/movie_2/movie_2.png',
                 'movie_url': '/static/movies/movie_2/movie_2.mkv',
                 'subtitles_url': '/static/movies/movie_2/movie_2.srt',
                 'genre': 'Comedy',
@@ -135,7 +282,7 @@ if __name__ == '__main__':
                 'title': 'Movie 3',
                 'year': 1968,
                 'rating': 100500,
-                'photo_url': '/static/movies/movie_3/movie_3.png',
+                'photo_url': 'http://localhost:5000/static/movies/movie_3/movie_3.png',
                 'movie_url': '/static/movies/movie_3/movie_3.mkv',
                 'subtitles_url': '/static/movies/movie_3/movie_3.srt',
                 'genre': 'Comedy',
@@ -149,7 +296,7 @@ if __name__ == '__main__':
                 'title': 'Movie 4',
                 'year': 1968,
                 'rating': 100500,
-                'photo_url': '/static/movies/movie_4/movie_4.jpg',
+                'photo_url': 'http://localhost:5000/static/movies/movie_4/movie_4.jpg',
                 'movie_url': '/static/movies/movie_4/movie_4.mkv',
                 'subtitles_url': '/static/movies/movie_4/movie_4.srt',
                 'genre': 'Comedy',
@@ -163,7 +310,7 @@ if __name__ == '__main__':
                 'title': 'Movie 5',
                 'year': 1968,
                 'rating': 100500,
-                'photo_url': '/static/movies/movie_5/movie_5.png',
+                'photo_url': 'http://localhost:5000/static/movies/movie_5/movie_5.png',
                 'movie_url': '/static/movies/movie_5/movie_5.mkv',
                 'subtitles_url': '/static/movies/movie_5/movie_5.srt',
                 'genre': 'Comedy',
@@ -177,7 +324,7 @@ if __name__ == '__main__':
                 'title': 'Movie 6',
                 'year': 1968,
                 'rating': 100500,
-                'photo_url': '/static/movies/movie_6/movie_6.jpg',
+                'photo_url': 'http://localhost:5000/static/movies/movie_6/movie_6.jpg',
                 'movie_url': '/static/movies/movie_6/movie_6.mkv',
                 'subtitles_url': '/static/movies/movie_6/movie_6.srt',
                 'genre': 'Comedy',
@@ -191,7 +338,7 @@ if __name__ == '__main__':
                 'title': 'Movie 7',
                 'year': 1968,
                 'rating': 100500,
-                'photo_url': '/static/movies/movie_7/movie_7.jpg',
+                'photo_url': 'http://localhost:5000/static/movies/movie_7/movie_7.jpg',
                 'movie_url': '/static/movies/movie_7/movie_7.mkv',
                 'subtitles_url': '/static/movies/movie_7/movie_7.srt',
                 'genre': 'Comedy',
