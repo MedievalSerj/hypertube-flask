@@ -142,7 +142,6 @@ def get_one(id):
 def search(start, stop):
     all = [m.get_search_item() for m in Movie.query.all()]
     return jsonify({'search_results': all[start:stop]})
-    # return jsonify({'search_results': all[start:stop]}), 200, {'Access-Control-Allow-Origin': '*'}
 
 
 @app.route('/watch/<int:id>')
@@ -285,6 +284,18 @@ class User(db.Model):
             self.passwd = data['passwd']
         except KeyError as e:
             raise ValidationError('Invalid user: missing ' + e.args[0])
+        
+    def modify_data(self, data):
+        if 'login' in data:
+            self.login = data['login']
+        if 'email' in data:
+            self.email = data['email']
+        if 'first_name' in data:
+            self.first_name = data['first_name']
+        if 'last_name' in data:
+            self.last_name = data['last_name']
+        if 'passwd' in data:
+            self.passwd = data['passwd']
 
 
 @app.route('/user', methods=['POST'])
@@ -303,6 +314,14 @@ def delete_user(user_id):
     db.session.commit()
     return jsonify({})
 
+
+@app.route('/user/<int:user_id>', methods=['PATCH'])
+def modify_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user.modify_data(request.json)
+    db.session.commit()
+    return jsonify({})
+    
 
 @app.route('/user/<int:user_id>', methods=['GET'])
 def get_user(user_id):
