@@ -1,0 +1,13 @@
+http POST http://127.0.0.1:5000/user login='Monak' email='monak@gmail.com' first_name='Ink' last_name='monaki' passwd='1234'
+
+http GET http://127.0.0.1:5000/user/1
+
+http POST http://127.0.0.1:5000/watched_movies movie_id=1 user_id=1
+
+http GET http://127.0.0.1:5000/watched_movies/1
+
+http POST http://127.0.0.1:5000/comments movie_id=1 user_id=1 msg='hello msg'
+
+http GET http://127.0.0.1:5000/comments/1
+
+http DELETE http://127.0.0.1:5000/user/1

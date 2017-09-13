@@ -24,6 +24,50 @@ class ValidationError(ValueError):
     pass
 
 
+@app.errorhandler(ValidationError)
+def bad_request(e):
+    response = jsonify({
+        'status': 400,
+        'error': 'bad request',
+        'message': e.args[0]
+    })
+    response.status_code = 400
+    return response
+
+
+@app.errorhandler(404)
+def not_found(e):
+    response = jsonify({
+        'status': 404,
+        'error': 'not found',
+        'message': 'invalid URI'
+    })
+    response.status_code = 404
+    return response
+
+
+@app.errorhandler(405)
+def method_not_supported(e):
+    response = jsonify({
+        'status': 405,
+        'error': 'method not supported',
+        'message': e.args[0]
+    })
+    response.status_code = 405
+    return response
+
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    response = jsonify({
+        'status': 500,
+        'error': 'internal servererror',
+        'message': e.args
+    })
+    response.status_code = 500
+    return response
+
+
 class Movie(db.Model):
     __tablename__ = 'movies'
     id = db.Column(db.Integer, primary_key=True)
@@ -160,7 +204,8 @@ def is_watched(user_id, movie_id):
 
 class Comment(db.Model):
     __tablename__ = 'comments'
-    movie_id = db.Column(db.Integer, primary_key=True, index=True)
+    comment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    movie_id = db.Column(db.Integer, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), index=True)
     msg = db.Column(db.Text, nullable=False)
     date_time = db.Column(db.DateTime, default=datetime.datetime.now(datetime.timezone.utc))
@@ -168,18 +213,37 @@ class Comment(db.Model):
     def get_url(self):
         return url_for('get_all_comments', movie_id=self.movie_id)
     
-    # def export_data(self):
-    #     return {
-    #         "comment_id": self.comment_id,
-    #         ""
-    #
-    #     }
+    def export_data(self):
+        return {
+            "movie_id": self.movie_id,
+            "user_id": self.user_id,
+            "msg": self.msg,
+            "date_time": self.date_time
+        }
     
+    def import_data(self, data):
+        try:
+            self.movie_id = data['movie_id']
+            self.user_id = data['user_id']
+            self.msg = data['msg']
+        except KeyError as e:
+            raise ValidationError('Invalid msg: missing ' + e.args[0])
     
 
 @app.route('/comments/<int:movie_id>', methods=['GET'])
 def get_all_comments(movie_id):
-    pass
+    comments = Comment.query.filter_by(movie_id=movie_id).all()
+    result = [comment.export_data() for comment in comments]
+    return jsonify({"comments": result}), 200
+
+
+@app.route('/comments', methods=['POST'])
+def post_comment():
+    comment = Comment()
+    comment.import_data(request.json)
+    db.session.add(comment)
+    db.session.commit()
+    return jsonify({}), 201
 
 
 class User(db.Model):
@@ -192,10 +256,10 @@ class User(db.Model):
     first_name = db.Column(db.String(128))
     last_name = db.Column(db.String(128))
     join_date = db.Column(db.DateTime, default=datetime.datetime.now(datetime.timezone.utc))
-    # watched_movies = db.relationship('WatchedMovie',  backref='user', lazy='dynamic',
-    #                                  cascade='all, delete-orphan')
     watched_movies = db.relationship('WatchedMovie', backref=db.backref('user', lazy='joined'), lazy='dynamic',
                                      cascade='all, delete-orphan')
+    comments = db.relationship('Comment', backref=db.backref('user', lazy='joined'), lazy='dynamic',
+                               cascade='all, delete-orphan')
     
     def get_url(self):
         return url_for('get_user', user_id=self.user_id, _external=True)
@@ -218,6 +282,7 @@ class User(db.Model):
             self.email = data['email']
             self.first_name = data['first_name']
             self.last_name = data['last_name']
+            self.passwd = data['passwd']
         except KeyError as e:
             raise ValidationError('Invalid user: missing ' + e.args[0])
 
@@ -229,6 +294,14 @@ def add_user():
     db.session.add(user)
     db.session.commit()
     return jsonify({}), 201, {'Location': user.get_url()}
+
+
+@app.route('/user/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({})
 
 
 @app.route('/user/<int:user_id>', methods=['GET'])
