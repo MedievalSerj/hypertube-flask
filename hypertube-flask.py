@@ -307,6 +307,24 @@ def add_user():
     return jsonify({}), 201, {'Location': user.get_url()}
 
 
+@app.route('/user_exists/<string:login>', methods=['GET'])
+def user_exists(login):
+    exists = False
+    user = User.query.filter_by(login=login).first()
+    if user:
+        exists = True
+    return jsonify({'user_exists': exists})
+
+
+@app.route('/email_exists/<string:email>', methods=['GET'])
+def email_exists(email):
+    exists = False
+    user = User.query.filter_by(email=email).first()
+    if user:
+        exists = True
+    return jsonify({'email_exists': exists})
+
+
 @app.route('/user/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -446,4 +464,4 @@ if __name__ == '__main__':
                 db.session.commit()
         except Exception as e:
             pass
-    app.run()
+    app.run(debug=True)
