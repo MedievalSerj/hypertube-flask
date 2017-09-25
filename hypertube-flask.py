@@ -4,11 +4,16 @@ import datetime
 from flask import Flask, url_for, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint
+from sqlalchemy import PrimaryKeyConstraint
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 from pprint import pprint
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
+from time import sleep
+
+
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'data.sqlite')
@@ -16,6 +21,7 @@ db_path = os.path.join(basedir, 'data.sqlite')
 app = Flask(__name__)
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+app.config['UPLOAD_FOLDER'] = '/nfs/2016/s/sladonia/repo/hypertube-flask/static/users'
 
 db = SQLAlchemy(app)
 
@@ -281,7 +287,7 @@ class User(db.Model):
             self.email = data['email']
             self.first_name = data['first_name']
             self.last_name = data['last_name']
-            self.passwd = data['passwd']
+            self.passwd = generate_password_hash(data['passwd'])
         except KeyError as e:
             raise ValidationError('Invalid user: missing ' + e.args[0])
         
@@ -296,15 +302,33 @@ class User(db.Model):
             self.last_name = data['last_name']
         if 'passwd' in data:
             self.passwd = data['passwd']
+            
+    def exists(self):
+        login_exists = User.query.filter_by(login=self.login).first()
+        email_exists = User.query.filter_by(email=self.email).first()
+        if login_exists or email_exists:
+            return True
+        return False
+
+
+@app.route('/upload_photo', methods=['POST'])
+def save_photo():
+    sleep(0.01)
+    pprint(request.files['image'])
+    file = request.files['image']
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+    return jsonify({'status': 'OK'}), 200
 
 
 @app.route('/user', methods=['POST'])
 def add_user():
     user = User()
     user.import_data(request.json)
+    if user.exists():
+        return jsonify({'exists': True}), 200
     db.session.add(user)
     db.session.commit()
-    return jsonify({}), 201, {'Location': user.get_url()}
+    return jsonify({'exists': False}), 201, {'Location': user.get_url()}
 
 
 @app.route('/user_exists/<string:login>', methods=['GET'])
