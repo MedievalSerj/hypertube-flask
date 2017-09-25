@@ -6,7 +6,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy import PrimaryKeyConstraint
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from PIL import Image
+from io import BytesIO
+import base64
+import uuid
 
 from pprint import pprint
 from sqlalchemy.engine import Engine
@@ -22,6 +25,8 @@ app = Flask(__name__)
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 app.config['UPLOAD_FOLDER'] = '/nfs/2016/s/sladonia/repo/hypertube-flask/static/users'
+app.config['ROOT_DIRECTORY'] = os.getcwd()
+
 
 db = SQLAlchemy(app)
 
@@ -266,6 +271,9 @@ class User(db.Model):
     comments = db.relationship('Comment', backref=db.backref('user', lazy='joined'), lazy='dynamic',
                                cascade='all, delete-orphan')
     
+    def __init__(self):
+        self.image_base64 = None
+    
     def get_url(self):
         return url_for('get_user', user_id=self.user_id, _external=True)
     
@@ -288,6 +296,8 @@ class User(db.Model):
             self.first_name = data['first_name']
             self.last_name = data['last_name']
             self.passwd = generate_password_hash(data['passwd'])
+            self.image_base64 = data['avatar64']
+            # print(data['avatar64'])
         except KeyError as e:
             raise ValidationError('Invalid user: missing ' + e.args[0])
         
@@ -309,16 +319,21 @@ class User(db.Model):
         if login_exists or email_exists:
             return True
         return False
-
-
-@app.route('/upload_photo', methods=['POST'])
-def save_photo():
-    sleep(0.01)
-    pprint(request.files['image'])
-    file = request.files['image']
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-    return jsonify({'status': 'OK'}), 200
-
+    
+    def create_userfolder(self):
+        os.mkdir(app.config['ROOT_DIRECTORY'] + '/static/users/' + self.login)
+    
+    def save_img(self):
+        if self.image_base64 is None:
+            return
+        im = Image.open(BytesIO(base64.b64decode(self.image_base64.split(',')[1])))
+        im_filename = str(uuid.uuid4()) + '.' + im.format
+        im_dbpath = '/static/' + self.login + '/' + im_filename
+        im_filepath = os.path.join(app.config['ROOT_DIRECTORY'],
+                                    'static', 'users', self.login, im_filename)
+        im.save(im_filepath)
+        self.avatar_url = im_dbpath
+        
 
 @app.route('/user', methods=['POST'])
 def add_user():
@@ -326,6 +341,8 @@ def add_user():
     user.import_data(request.json)
     if user.exists():
         return jsonify({'exists': True}), 200
+    user.create_userfolder()
+    user.save_img()
     db.session.add(user)
     db.session.commit()
     return jsonify({'exists': False}), 201, {'Location': user.get_url()}
