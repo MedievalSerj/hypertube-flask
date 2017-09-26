@@ -4,8 +4,10 @@ import datetime
 from flask import Flask, url_for, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_mail import Mail, Message
+from flask_jwt import JWT, jwt_required, current_identity
 from sqlalchemy import PrimaryKeyConstraint
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash, safe_str_cmp
 from PIL import Image
 from io import BytesIO
 import base64
@@ -14,7 +16,6 @@ import uuid
 from pprint import pprint
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
-from time import sleep
 
 
 
@@ -23,12 +24,25 @@ db_path = os.path.join(basedir, 'data.sqlite')
 
 app = Flask(__name__)
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
-app.config['UPLOAD_FOLDER'] = '/nfs/2016/s/sladonia/repo/hypertube-flask/static/users'
-app.config['ROOT_DIRECTORY'] = os.getcwd()
-
-
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+# app.config['UPLOAD_FOLDER'] = '/nfs/2016/s/sladonia/repo/hypertube-flask/static/users'
+# app.config['ROOT_DIRECTORY'] = os.getcwd()
+app.config.update(dict(
+    NG_ADDRESS='http://localhost:4200',
+    ROOT_DIRECTORY=os.getcwd(),
+    SQLALCHEMY_DATABASE_URI='sqlite:///' + db_path,
+    UPLOAD_FOLDER='/nfs/2016/s/sladonia/repo/hypertube-flask/static/users',
+    SECRET_KEY='wilhelm-marduk',
+    DEBUG=False,
+    MAIL_SERVER='smtp.gmail.com',
+    MAIL_PORT=587,
+    MAIL_USE_TLS=True,
+    MAIL_USE_SSL=False,
+    MAIL_USERNAME='ladonya.s@gmail.com',
+    MAIL_PASSWORD=os.environ.get('G_PASSWD'),
+))
 db = SQLAlchemy(app)
+mail = Mail(app)
 
 
 class ValidationError(ValueError):
@@ -265,6 +279,8 @@ class User(db.Model):
     passwd = db.Column(db.String(256))
     first_name = db.Column(db.String(128))
     last_name = db.Column(db.String(128))
+    registration_token = db.Column(db.String(128))
+    activated = db.Column(db.Integer, default=0)
     join_date = db.Column(db.DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     watched_movies = db.relationship('WatchedMovie', backref=db.backref('user', lazy='joined'), lazy='dynamic',
                                      cascade='all, delete-orphan')
@@ -334,6 +350,39 @@ class User(db.Model):
         im.save(im_filepath)
         self.avatar_url = im_dbpath
         
+    def send_confirm_email(self):
+        token = str(uuid.uuid4())
+        subject = 'Hypertube email confirmation'
+        sender = 'http://localhost:4200/'
+        recipient = self.email
+        body = '''Greetings new hypertube user!
+        \n\nPlease follow the link to finish registration:
+        \n{0}'''.format(app.config['NG_ADDRESS']
+                        + '/sign-in/?confirmed=true&token=' +
+                        token +
+                        '&login=' +
+                        self.login)
+        msg = Message(sender=sender,
+                      recipients=[recipient],
+                      subject=subject,
+                      body=body
+                      )
+        self.registration_token = token
+        mail.send(msg)
+
+
+
+    
+
+@app.route('/confirm_email/<string:login>/<string:token>', methods=['GET'])
+def confirm_email(login, token):
+    user = User.query.filter_by(login=login, registration_token=token).first()
+    if user is None:
+        return jsonify({'confirmed': False}), 200
+    user.activated = 1
+    db.session.commit()
+    return jsonify({'confirmed': True}), 200
+
 
 @app.route('/user', methods=['POST'])
 def add_user():
@@ -344,6 +393,7 @@ def add_user():
     user.create_userfolder()
     user.save_img()
     db.session.add(user)
+    user.send_confirm_email()
     db.session.commit()
     return jsonify({'exists': False}), 201, {'Location': user.get_url()}
 
@@ -388,11 +438,36 @@ def get_user(user_id):
     return jsonify(user.export_data())
 
 
+# hook for sqlite foreign key restriction
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
+
+
+def authenticate(username, password):
+    print('auth breakpoint')
+    
+    user = User.query.filter_by(login=username).first()
+    if user and check_password_hash(user.passwd, password):
+        print('auth breakpoint')
+        return user
+
+
+def identity(payload):
+    print('identity breakpoint')
+    
+    return User.query.filter_by(user_id=payload['identity']).first()
+
+
+jwt = JWT(app, authenticate, identity)
+
+
+@app.route('/protected', methods=['GET'])
+@jwt_required()
+def protected_function():
+    return '%s' % current_identity.user_id
 
 
 if __name__ == '__main__':
