@@ -24,9 +24,6 @@ db_path = os.path.join(basedir, 'data.sqlite')
 
 app = Flask(__name__)
 CORS(app)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
-# app.config['UPLOAD_FOLDER'] = '/nfs/2016/s/sladonia/repo/hypertube-flask/static/users'
-# app.config['ROOT_DIRECTORY'] = os.getcwd()
 app.config.update(dict(
     NG_ADDRESS='http://localhost:4200',
     ROOT_DIRECTORY=os.getcwd(),
@@ -275,6 +272,7 @@ class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     login = db.Column(db.String(128), unique=True)
     email = db.Column(db.String(128), unique=True)
+    jwt = db.Column(db.String)
     avatar_url = db.Column(db.String(256))
     passwd = db.Column(db.String(256))
     first_name = db.Column(db.String(128))
@@ -371,9 +369,6 @@ class User(db.Model):
         mail.send(msg)
 
 
-
-    
-
 @app.route('/confirm_email/<string:login>/<string:token>', methods=['GET'])
 def confirm_email(login, token):
     user = User.query.filter_by(login=login, registration_token=token).first()
@@ -450,9 +445,12 @@ def authenticate(username, password):
     print('auth breakpoint')
     
     user = User.query.filter_by(login=username).first()
+    if user is None:
+        user = User.query.filter_by(email=username).first()
     if user and check_password_hash(user.passwd, password):
         print('auth breakpoint')
         return user
+    return None
 
 
 def identity(payload):
