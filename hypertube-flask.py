@@ -19,75 +19,75 @@ from sqlalchemy import event
 
 
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(basedir, 'data.sqlite')
-
-app = Flask(__name__)
-CORS(app)
-app.config.update(dict(
-    NG_ADDRESS='http://localhost:4200',
-    ROOT_DIRECTORY=os.getcwd(),
-    SQLALCHEMY_DATABASE_URI='sqlite:///' + db_path,
-    UPLOAD_FOLDER='/nfs/2016/s/sladonia/repo/hypertube-flask/static/users',
-    SECRET_KEY='wilhelm-marduk',
-    DEBUG=False,
-    MAIL_SERVER='smtp.gmail.com',
-    MAIL_PORT=587,
-    MAIL_USE_TLS=True,
-    MAIL_USE_SSL=False,
-    MAIL_USERNAME='ladonya.s@gmail.com',
-    MAIL_PASSWORD=os.environ.get('G_PASSWD'),
-))
-db = SQLAlchemy(app)
-mail = Mail(app)
-
-
-class ValidationError(ValueError):
-    pass
+# basedir = os.path.abspath(os.path.dirname(__file__))
+# db_path = os.path.join(basedir, 'data.sqlite')
+#
+# app = Flask(__name__)
+# CORS(app)
+# app.config.update(dict(
+#     NG_ADDRESS='http://localhost:4200',
+#     ROOT_DIRECTORY=os.getcwd(),
+#     SQLALCHEMY_DATABASE_URI='sqlite:///' + db_path,
+#     UPLOAD_FOLDER='/nfs/2016/s/sladonia/repo/hypertube-flask/static/users',
+#     SECRET_KEY='wilhelm-marduk',
+#     DEBUG=False,
+#     MAIL_SERVER='smtp.gmail.com',
+#     MAIL_PORT=587,
+#     MAIL_USE_TLS=True,
+#     MAIL_USE_SSL=False,
+#     MAIL_USERNAME='ladonya.s@gmail.com',
+#     MAIL_PASSWORD=os.environ.get('G_PASSWD'),
+# ))
+# db = SQLAlchemy(app)
+# mail = Mail(app)
 
 
-@app.errorhandler(ValidationError)
-def bad_request(e):
-    response = jsonify({
-        'status': 400,
-        'error': 'bad request',
-        'message': e.args[0]
-    })
-    response.status_code = 400
-    return response
-
-
-@app.errorhandler(404)
-def not_found(e):
-    response = jsonify({
-        'status': 404,
-        'error': 'not found',
-        'message': 'invalid URI'
-    })
-    response.status_code = 404
-    return response
-
-
-@app.errorhandler(405)
-def method_not_supported(e):
-    response = jsonify({
-        'status': 405,
-        'error': 'method not supported',
-        'message': e.args[0]
-    })
-    response.status_code = 405
-    return response
-
-
-@app.errorhandler(500)
-def internal_server_error(e):
-    response = jsonify({
-        'status': 500,
-        'error': 'internal servererror',
-        'message': e.args
-    })
-    response.status_code = 500
-    return response
+# class ValidationError(ValueError):
+#     pass
+#
+#
+# @app.errorhandler(ValidationError)
+# def bad_request(e):
+#     response = jsonify({
+#         'status': 400,
+#         'error': 'bad request',
+#         'message': e.args[0]
+#     })
+#     response.status_code = 400
+#     return response
+#
+#
+# @app.errorhandler(404)
+# def not_found(e):
+#     response = jsonify({
+#         'status': 404,
+#         'error': 'not found',
+#         'message': 'invalid URI'
+#     })
+#     response.status_code = 404
+#     return response
+#
+#
+# @app.errorhandler(405)
+# def method_not_supported(e):
+#     response = jsonify({
+#         'status': 405,
+#         'error': 'method not supported',
+#         'message': e.args[0]
+#     })
+#     response.status_code = 405
+#     return response
+#
+#
+# @app.errorhandler(500)
+# def internal_server_error(e):
+#     response = jsonify({
+#         'status': 500,
+#         'error': 'internal servererror',
+#         'message': e.args
+#     })
+#     response.status_code = 500
+#     return response
 
 
 # class Movie(db.Model):

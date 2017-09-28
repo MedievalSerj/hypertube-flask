@@ -1,6 +1,7 @@
 from ..exceptions import ValidationError
 from flask import url_for
 from sqlalchemy import PrimaryKeyConstraint
+from app import db
 
 
 class WatchedMovie(db.Model):
@@ -11,7 +12,7 @@ class WatchedMovie(db.Model):
                       {})
     
     def get_url(self):
-        return url_for('get_watched_movies', user_id=self.user_id, _external=True)
+        return url_for('user_controllers.get_watched_movies', user_id=self.user_id, _external=True)
     
     def export_data(self):
         return self.movie_id

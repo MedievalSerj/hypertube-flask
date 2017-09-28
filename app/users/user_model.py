@@ -1,12 +1,14 @@
 import os
 import datetime
-from flask import url_for
-from flask_mail import Mail, Message
+from flask import url_for, current_app
+from flask_mail import Message
 from werkzeug.security import generate_password_hash
 from PIL import Image
 from io import BytesIO
 import base64
 import uuid
+from app import db, mail
+from ..exceptions import ValidationError
 
 
 class User(db.Model):
@@ -31,7 +33,7 @@ class User(db.Model):
         self.image_base64 = None
     
     def get_url(self):
-        return url_for('get_user', user_id=self.user_id, _external=True)
+        return url_for('user_controllers.get_user', user_id=self.user_id, _external=True)
     
     def export_data(self):
         return {
@@ -42,7 +44,7 @@ class User(db.Model):
             'first_name': self.first_name,
             'last_name': self.last_name,
             'join_date': self.join_date.isoformat() + 'Z',
-            'watched_movies': url_for('get_watched_movies', user_id=self.user_id, _external=True)
+            'watched_movies': url_for('user_controllers.get_watched_movies', user_id=self.user_id, _external=True)
         }
     
     def import_data(self, data):
@@ -77,7 +79,7 @@ class User(db.Model):
         return False
     
     def create_userfolder(self):
-        os.mkdir(app.config['ROOT_DIRECTORY'] + '/static/users/' + self.login)
+        os.mkdir(current_app.config['ROOT_DIRECTORY'] + '/static/users/' + self.login)
     
     def save_img(self):
         if self.image_base64 is None:
@@ -85,7 +87,7 @@ class User(db.Model):
         im = Image.open(BytesIO(base64.b64decode(self.image_base64.split(',')[1])))
         im_filename = str(uuid.uuid4()) + '.' + im.format
         im_dbpath = '/static/' + self.login + '/' + im_filename
-        im_filepath = os.path.join(app.config['ROOT_DIRECTORY'],
+        im_filepath = os.path.join(current_app.config['ROOT_DIRECTORY'],
                                    'static', 'users', self.login, im_filename)
         im.save(im_filepath)
         self.avatar_url = im_dbpath
@@ -97,7 +99,7 @@ class User(db.Model):
         recipient = self.email
         body = '''Greetings new hypertube user!
         \n\nPlease follow the link to finish registration:
-        \n{0}'''.format(app.config['NG_ADDRESS']
+        \n{0}'''.format(current_app.config['NG_ADDRESS']
                         + '/sign-in/?confirmed=true&token=' +
                         token +
                         '&login=' +

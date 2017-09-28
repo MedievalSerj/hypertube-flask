@@ -1,8 +1,9 @@
-from flask import jsonify, request
+from flask import jsonify, request, abort
 from . import users_blueprint
 from .user_model import User
 from .comment_model import Comment
 from .watched_movie_model import WatchedMovie
+from app import db
 
 
 @users_blueprint.route('/confirm_email/<string:login>/<string:token>', methods=['GET'])
@@ -20,8 +21,11 @@ def add_user():
     user = User()
     user.import_data(request.json)
     if user.exists():
-        return jsonify({'exists': True}), 200
-    user.create_userfolder()
+        abort(409)
+    try:
+        user.create_userfolder()
+    except FileExistsError:
+        abort(409)
     user.save_img()
     db.session.add(user)
     user.send_confirm_email()
@@ -108,7 +112,6 @@ def add_watched_movie():
 def get_watched_movies(user_id):
     watched_movies = WatchedMovie.query.filter_by(user_id=user_id).all()
     result = [movie.export_data() for movie in watched_movies]
-    pprint(result)
     return jsonify(result), 200
 
 

@@ -1,6 +1,7 @@
 from . import movies_blueprint
 from .movie_model import Movie
 from flask import jsonify, request
+from app import db
 
 
 @movies_blueprint.route('/add', methods=['POST'])

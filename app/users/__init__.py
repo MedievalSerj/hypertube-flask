@@ -1,5 +1,5 @@
 from flask import Blueprint
 
-users_blueprint = Blueprint('controllers', __name__)
+users_blueprint = Blueprint('user_controllers', __name__)
 
-from . import controllers
+from . import user_controllers, errors

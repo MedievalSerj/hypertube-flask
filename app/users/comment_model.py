@@ -1,6 +1,7 @@
 import datetime
 from flask import url_for
 from ..exceptions import ValidationError
+from app import db
 
 
 class Comment(db.Model):
@@ -12,7 +13,7 @@ class Comment(db.Model):
     date_time = db.Column(db.DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     
     def get_url(self):
-        return url_for('get_all_comments', movie_id=self.movie_id)
+        return url_for('user_controllers.get_all_comments', movie_id=self.movie_id)
     
     def export_data(self):
         return {

@@ -1,4 +1,6 @@
 from flask import url_for
+from app import db
+from ..exceptions import ValidationError
 
 
 class Movie(db.Model):
@@ -25,7 +27,7 @@ class Movie(db.Model):
         return self
     
     def get_self_url(self):
-        return url_for('watch', id=self.id,
+        return url_for('movie_controllers.watch', id=self.id,
                        title=self.title, _external=True)
     
     def get_search_item(self):
