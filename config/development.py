@@ -2,7 +2,7 @@ import os
 
 basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 db_path = os.path.join(basedir, 'data.sqlite')
-upload_folder = os.path.join(basedir, 'static', 'users')
+upload_folder = os.path.join(basedir, 'app', 'static', 'users')
 
 
 NG_ADDRESS = 'http://localhost:4200'

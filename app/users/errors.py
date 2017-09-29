@@ -14,6 +14,17 @@ def bad_request(e):
     return response
 
 
+@users_blueprint.app_errorhandler(403)
+def not_found(e):
+    response = jsonify({
+        'status': 403,
+        'error': 'forbidden',
+        'message': 'access denied'
+    })
+    response.status_code = 400
+    return response
+
+
 @users_blueprint.app_errorhandler(400)
 def not_found(e):
     response = jsonify({

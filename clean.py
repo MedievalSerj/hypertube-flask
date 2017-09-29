@@ -4,7 +4,7 @@ import os
 
 
 try:
-    shutil.rmtree('./static/users')
+    shutil.rmtree('./app/static/users')
 except:
     pass
 

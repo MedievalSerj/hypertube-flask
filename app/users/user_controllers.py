@@ -1,4 +1,4 @@
-from flask import jsonify, request, abort, current_app
+from flask import jsonify, request, abort, g
 from . import users_blueprint
 from .user_model import User
 from .comment_model import Comment
@@ -6,17 +6,33 @@ from .watched_movie_model import WatchedMovie
 from app import db
 from werkzeug.security import check_password_hash
 import jwt
+from functools import wraps
+
+
+def auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorisation')
+        try:
+            g.user_data = User.decode_token(token)
+        except jwt.exceptions.DecodeError:
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 @users_blueprint.route('/auth', methods=['POST'])
 def auth():
     data = request.json
     if 'login' and 'passwd' not in data:
+        print('bp_1')
         abort(400)
     user = User.query.filter_by(login=data['login']).first()
     if user is None:
+        print('bp_2')
         abort(400)
     if not check_password_hash(user.passwd, data['passwd']):
+        print('bp_3')
         abort(400)
     token = user.get_token()
     print('decoded token: ' + str(User.decode_token(token)))
