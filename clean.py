@@ -9,6 +9,6 @@ except:
     pass
 
 try:
-    os.remove('./app/data.sqlite')
+    os.remove('./data.sqlite')
 except:
     pass

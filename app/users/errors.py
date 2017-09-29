@@ -14,6 +14,17 @@ def bad_request(e):
     return response
 
 
+@users_blueprint.app_errorhandler(400)
+def not_found(e):
+    response = jsonify({
+        'status': 400,
+        'error': 'bad request',
+        'message': 'invalid data provided'
+    })
+    response.status_code = 400
+    return response
+
+
 @users_blueprint.app_errorhandler(404)
 def not_found(e):
     response = jsonify({

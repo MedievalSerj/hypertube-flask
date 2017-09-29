@@ -9,6 +9,7 @@ import base64
 import uuid
 from app import db, mail
 from ..exceptions import ValidationError
+import jwt
 
 
 class User(db.Model):
@@ -55,7 +56,6 @@ class User(db.Model):
             self.last_name = data['last_name']
             self.passwd = generate_password_hash(data['passwd'])
             self.image_base64 = data['avatar64']
-            # print(data['avatar64'])
         except KeyError as e:
             raise ValidationError('Invalid user: missing ' + e.args[0])
     
@@ -112,3 +112,13 @@ class User(db.Model):
         self.registration_token = token
         mail.send(msg)
     
+    def get_token(self):
+        return jwt.encode(self.export_data(),
+                          current_app.config['SECRET_KEY'],
+                          current_app.config['JWT_ALGORITHM']).decode("utf-8")
+    
+    @staticmethod
+    def decode_token(token):
+        return jwt.decode(token,
+                          current_app.config['SECRET_KEY'],
+                          current_app.config['JWT_ALGORITHM'])

@@ -1,9 +1,26 @@
-from flask import jsonify, request, abort
+from flask import jsonify, request, abort, current_app
 from . import users_blueprint
 from .user_model import User
 from .comment_model import Comment
 from .watched_movie_model import WatchedMovie
 from app import db
+from werkzeug.security import check_password_hash
+import jwt
+
+
+@users_blueprint.route('/auth', methods=['POST'])
+def auth():
+    data = request.json
+    if 'login' and 'passwd' not in data:
+        abort(400)
+    user = User.query.filter_by(login=data['login']).first()
+    if user is None:
+        abort(400)
+    if not check_password_hash(user.passwd, data['passwd']):
+        abort(400)
+    token = user.get_token()
+    print('decoded token: ' + str(User.decode_token(token)))
+    return jsonify({'token': token}), 200
 
 
 @users_blueprint.route('/confirm_email/<string:login>/<string:token>', methods=['GET'])
