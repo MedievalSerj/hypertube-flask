@@ -94,9 +94,13 @@ def delete_user(user_id):
 
 @users_blueprint.route('/user/<int:user_id>', methods=['PATCH'])
 def modify_user(user_id):
-    user = User.query.get_or_404(user_id)
-    user.modify_data(request.json)
-    db.session.commit()
+    # user = User.query.get_or_404(user_id)
+    data = request.json
+    
+    print(data)
+    
+    # user.modify_data(data)
+    # db.session.commit()
     return jsonify({})
 
 

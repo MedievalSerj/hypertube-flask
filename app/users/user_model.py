@@ -70,7 +70,11 @@ class User(db.Model):
         if 'last_name' in data:
             self.last_name = data['last_name']
         if 'passwd' in data:
-            self.passwd = data['passwd']
+            self.passwd = generate_password_hash(data['passwd'])
+        if 'avatar64' in data and data['avatar64'] is not None:
+            self.delete_img_file()
+            self.image_base64 = data['avatar64']
+            self.save_img()
     
     def exists(self):
         login_exists = User.query.filter_by(login=self.login).first()
@@ -82,6 +86,12 @@ class User(db.Model):
     
     def create_userfolder(self):
         os.mkdir(os.path.join(current_app.config['UPLOAD_FOLDER'], self.login))
+        
+    def delete_img_file(self):
+        del_path = str(current_app.config['APP_DIRECTORY']) + str(self.avatar_url)
+        print('del_path: ' + del_path)
+        if os.path.exists(del_path):
+            os.remove(del_path)
     
     def save_img(self):
         if self.image_base64 is None:
