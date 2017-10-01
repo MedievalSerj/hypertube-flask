@@ -10,6 +10,9 @@ import uuid
 from app import db, mail
 from ..exceptions import ValidationError
 import jwt
+import shutil
+
+
 
 
 class User(db.Model):
@@ -69,10 +72,13 @@ class User(db.Model):
             self.first_name = data['first_name']
         if 'last_name' in data:
             self.last_name = data['last_name']
-        if 'passwd' in data:
+        if 'passwd' in data and data['passwd'] is not None:
             self.passwd = generate_password_hash(data['passwd'])
         if 'avatar64' in data and data['avatar64'] is not None:
             self.delete_img_file()
+            if data['avatar64'] == 'del':
+                self.avatar_url = None
+                return
             self.image_base64 = data['avatar64']
             self.save_img()
     
@@ -85,7 +91,10 @@ class User(db.Model):
         return False
     
     def create_userfolder(self):
-        os.mkdir(os.path.join(current_app.config['UPLOAD_FOLDER'], self.login))
+        os.mkdir(os.path.join(current_app.config['UPLOAD_FOLDER'], str(self.user_id)))
+        
+    def remove_userfolder(self):
+        shutil.rmtree(os.path.join(current_app.config['UPLOAD_FOLDER'], str(self.user_id)))
         
     def delete_img_file(self):
         del_path = str(current_app.config['APP_DIRECTORY']) + str(self.avatar_url)
@@ -98,8 +107,8 @@ class User(db.Model):
             return
         im = Image.open(BytesIO(base64.b64decode(self.image_base64.split(',')[1])))
         im_filename = str(uuid.uuid4()) + '.' + im.format
-        im_dbpath = '/static/users/' + self.login + '/' + im_filename
-        im_filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], self.login, im_filename)
+        im_dbpath = '/static/users/' + str(self.user_id) + '/' + im_filename
+        im_filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], str(self.user_id), im_filename)
         im.save(im_filepath)
         self.avatar_url = im_dbpath
     
@@ -115,6 +124,26 @@ class User(db.Model):
                         token +
                         '&login=' +
                         self.login)
+        msg = Message(sender=sender,
+                      recipients=[recipient],
+                      subject=subject,
+                      body=body
+                      )
+        self.registration_token = token
+        mail.send(msg)
+
+    def send_reset_email(self, email):
+        token = str(uuid.uuid4())
+        subject = 'Hypertube reset email'
+        sender = 'http://localhost:4200/'
+        recipient = email
+        body = '''Please follow the next !
+                \n\nPlease follow the link to finish registration:
+                \n{0}'''.format(current_app.config['NG_ADDRESS']
+                                + '/sign-in/?confirmed=true&token=' +
+                                token +
+                                '&login=' +
+                                self.login)
         msg = Message(sender=sender,
                       recipients=[recipient],
                       subject=subject,

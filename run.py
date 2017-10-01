@@ -28,9 +28,9 @@ if __name__ == '__main__':
               'avatar64': None
             }
             user.import_data(data)
-            user.create_userfolder()
             db.session.add(user)
             db.session.commit()
+            user.create_userfolder()
         if Movie.query.get(1) is None:
             movies = []
             movies.append({

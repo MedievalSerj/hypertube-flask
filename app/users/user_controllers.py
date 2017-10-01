@@ -21,21 +21,26 @@ def auth_required(f):
     return decorated_function
 
 
+@users_blueprint.route('/reset', methods=['POST'])
+def reset_email():
+    data = request.json
+    if 'email' not in data:
+        abort(400)
+    User.send_reset_email(data['email'])
+    return jsonify({}), 200
+    
+
 @users_blueprint.route('/auth', methods=['POST'])
 def auth():
     data = request.json
     if 'login' and 'passwd' not in data:
-        print('bp_1')
         abort(400)
     user = User.query.filter_by(login=data['login']).first()
     if user is None:
-        print('bp_2')
         abort(400)
     if not check_password_hash(user.passwd, data['passwd']):
-        print('bp_3')
         abort(400)
     token = user.get_token()
-    print('decoded token: ' + str(User.decode_token(token)))
     return jsonify({'token': token}), 200
 
 
@@ -55,14 +60,14 @@ def add_user():
     user.import_data(request.json)
     if user.exists():
         abort(409)
-    try:
-        user.create_userfolder()
-    except FileExistsError:
-        abort(409)
     user.save_img()
     db.session.add(user)
     user.send_confirm_email()
     db.session.commit()
+    try:
+        user.create_userfolder()
+    except FileExistsError:
+        abort(409)
     return jsonify({'exists': False}), 201, {'Location': user.get_url()}
 
 
@@ -87,6 +92,7 @@ def email_exists(email):
 @users_blueprint.route('/user/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
+    user.remove_userfolder()
     db.session.delete(user)
     db.session.commit()
     return jsonify({})
@@ -94,14 +100,15 @@ def delete_user(user_id):
 
 @users_blueprint.route('/user/<int:user_id>', methods=['PATCH'])
 def modify_user(user_id):
-    # user = User.query.get_or_404(user_id)
+    user = User.query.get_or_404(user_id)
     data = request.json
-    
-    print(data)
-    
-    # user.modify_data(data)
-    # db.session.commit()
-    return jsonify({})
+    #
+    # print(data)
+    #
+    user.modify_data(data)
+    db.session.commit()
+    token = user.get_token()
+    return jsonify({'token': token})
 
 
 @users_blueprint.route('/user/<int:user_id>', methods=['GET'])
