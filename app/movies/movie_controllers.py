@@ -18,6 +18,12 @@ def get_one(id):
     return jsonify(Movie.query.get_or_404(id).get_search_item())
 
 
+@movies_blueprint.route('/search/<string:searchword>/<int:start>/<int:stop>')
+def search_word(searchword, start, stop):
+    all = [m.get_search_item() for m in Movie.query.all()]
+    return jsonify({'search_results': all[start:stop]})
+
+
 @movies_blueprint.route('/search/<int:start>/<int:stop>')
 def search(start, stop):
     all = [m.get_search_item() for m in Movie.query.all()]
