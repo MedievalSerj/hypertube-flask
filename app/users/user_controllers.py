@@ -7,7 +7,9 @@ from app import db
 from werkzeug.security import check_password_hash
 import jwt
 from functools import wraps
+from time import sleep
 
+# from urllib import request, parse
 
 def auth_required(f):
     @wraps(f)
@@ -19,6 +21,23 @@ def auth_required(f):
             abort(403)
         return f(*args, **kwargs)
     return decorated_function
+
+
+@users_blueprint.route('/oauth42/<string:code>', methods=['GET'])
+def oauth42(code):
+    sleep(0.1)
+    print('code: ' + code)
+    # data = {
+    #     'grant_type': 'authorization_code',
+    #     'client_id': '135caaea196569df717378f2950cfb4833e1a936d8c3c4a5f56f57fbec6935a4',
+    #     'client_secret': 'b26e81d39a962c5304b0f8642cf670eab074893794faa08285a92d3e7eaebdad',
+    #     'code': code,
+    # }
+    # encoded_data = parse.urlencode(data).encode()
+    # req = request.Request('https://api.intra.42.fr/oauth/token', data=encoded_data)
+    # resp = request.urlopen(req)
+    # print('resp' + str(resp))
+    return jsonify({'status': 'OK'}), 200
 
 
 @users_blueprint.route('/reset', methods=['POST'])
