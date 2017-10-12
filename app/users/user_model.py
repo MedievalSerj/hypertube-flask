@@ -1,6 +1,6 @@
 import os
 import datetime
-from flask import url_for, current_app
+from flask import url_for, current_app, abort
 from flask_mail import Message
 from werkzeug.security import generate_password_hash
 from PIL import Image
@@ -11,8 +11,8 @@ from app import db, mail
 from ..exceptions import ValidationError
 import jwt
 import shutil
-
-
+from urllib import request, parse
+from json import loads
 
 
 class User(db.Model):
@@ -162,3 +162,33 @@ class User(db.Model):
         return jwt.decode(token,
                           current_app.config['SECRET_KEY'],
                           current_app.config['JWT_ALGORITHM'])
+    
+    @staticmethod
+    def get42_token(code):
+        # print('code: ' + code)
+        data = {
+            'grant_type': 'authorization_code',
+            'client_id': '135caaea196569df717378f2950cfb4833e1a936d8c3c4a5f56f57fbec6935a4',
+            'client_secret': 'b26e81d39a962c5304b0f8642cf670eab074893794faa08285a92d3e7eaebdad',
+            'redirect_uri': 'http://localhost:4200/oauth42',
+            'code': code,
+        }
+        encoded_data = parse.urlencode(data).encode()
+        try:
+            req = request.Request('https://api.intra.42.fr/oauth/token', data=encoded_data)
+            resp = request.urlopen(req)
+            response_dict = loads(resp.read().decode('utf-8'))
+        except Exception:
+            abort(401)
+        return response_dict['access_token']
+    
+    @staticmethod
+    def get42_user(token):
+        try:
+            req = request.Request('https://api.intra.42.fr/v2/me')
+            req.add_header('Authorization', 'Bearer ' + token)
+            resp = request.urlopen(req)
+            response_dict = loads(resp.read().decode('utf-8'))
+        except Exception:
+            abort(401)
+        return response_dict

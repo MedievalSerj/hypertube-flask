@@ -14,6 +14,16 @@ def bad_request(e):
     return response
 
 
+@users_blueprint.app_errorhandler(401)
+def unauthorised(e):
+    response = jsonify({
+        'status': 401,
+        'error': 'Unauthorised',
+    })
+    response.status_code = 401
+    return response
+
+
 @users_blueprint.app_errorhandler(403)
 def not_found(e):
     response = jsonify({
