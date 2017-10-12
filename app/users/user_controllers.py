@@ -26,11 +26,56 @@ def auth_required(f):
 def oauth42(code):
     token_42 = User.get42_token(code)
     user42 = User.get42_user(token_42)
-    login = user42['login']
-    first_name = user42['']
-    print('login: ' + login)
-    return jsonify({'status': 'OK'}), 200
+    data = dict()
+    data['email'] = user42['email']
+    data['user42_id'] = user42['campus_users'][0]['user_id']
+    user = User.get_user_by_42_id_or_none(data['user42_id'])
+    if user is None:
+        data['login'] = user42['login']
+        data['first_name'] = user42['first_name']
+        data['last_name'] = user42['last_name']
+        image_url = user42['image_url']
+        data['passwd'] = User.generate_passwd()
+        data['login'] = User.generate_unique_login(data['login'])
+        user = User()
+        user.import_data(data)
+        db.session.add(user)
+        db.session.flush()
+        user.create_userfolder()
+        user.download_save_42_photo(image_url)
+        db.session.commit()
+        user.send_42_registration_email(data['passwd'])
+    token = user.get_token()
+    return jsonify({'token': token}), 200
 
+
+@users_blueprint.route('/oauth-google', methods=['POST'])
+def oauth_google():
+    code = request.json['code']
+    token = User.get_google_token(code)
+    google_user = User.get_google_user(token)
+    data = dict()
+    data['google_user_id'] = google_user['id']
+    user = User.get_user_by_google_id_or_none(data['google_user_id'])
+    if user is None:
+        data['email'] = google_user['email']
+        data['login'] = google_user['name']
+        data['first_name'] = google_user['name']
+        data['last_name'] = google_user['family_name']
+        image_url = google_user['picture']
+        data['passwd'] = User.generate_passwd()
+        data['login'] = User.generate_unique_login(data['login'])
+        user = User()
+        user.import_data(data)
+        db.session.add(user)
+        db.session.flush()
+        user.create_userfolder()
+        user.download_save_42_photo(image_url)
+        db.session.commit()
+        user.send_42_registration_email(data['passwd'])
+    token = user.get_token()
+    return jsonify({'token': token}), 200
+    
 
 @users_blueprint.route('/reset', methods=['POST'])
 def reset_email():
@@ -71,14 +116,16 @@ def add_user():
     user.import_data(request.json)
     if user.exists():
         abort(409)
-    user.save_img()
     db.session.add(user)
-    user.send_confirm_email()
-    db.session.commit()
+    db.session.flush()
     try:
         user.create_userfolder()
     except FileExistsError:
         abort(409)
+    user.save_img()
+    user.send_confirm_email()
+    db.session.commit()
+
     return jsonify({'exists': False}), 201, {'Location': user.get_url()}
 
 
