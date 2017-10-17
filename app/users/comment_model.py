@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from flask import url_for
 from ..exceptions import ValidationError
 from app import db
@@ -10,7 +10,8 @@ class Comment(db.Model):
     movie_id = db.Column(db.Integer, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), index=True)
     msg = db.Column(db.Text, nullable=False)
-    date_time = db.Column(db.DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+    # date_time = db.Column(db.DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+    date_time = db.Column(db.Integer, default=int(datetime.now().timestamp()))
     
     def get_url(self):
         return url_for('user_controllers.get_all_comments', movie_id=self.movie_id)
