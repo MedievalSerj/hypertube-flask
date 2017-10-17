@@ -15,13 +15,19 @@ class Comment(db.Model):
     def get_url(self):
         return url_for('user_controllers.get_all_comments', movie_id=self.movie_id)
     
-    def export_data(self):
-        return {
-            "movie_id": self.movie_id,
-            "user_id": self.user_id,
-            "msg": self.msg,
-            "date_time": self.date_time
-        }
+    @staticmethod
+    def export_data(comments):
+        result = list()
+        for user, comment in comments:
+            result.append({
+                'user_id': comment.user_id,
+                'movie_id': comment.movie_id,
+                'msg': comment.msg,
+                'date_time': comment.date_time,
+                'login': user.login,
+                'avatar_url': user.avatar_url
+            })
+        return result
     
     def import_data(self, data):
         try:

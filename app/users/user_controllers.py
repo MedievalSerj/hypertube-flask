@@ -180,8 +180,11 @@ def get_user(user_id):
 
 @users_blueprint.route('/comments/<int:movie_id>', methods=['GET'])
 def get_all_comments(movie_id):
-    comments = Comment.query.filter_by(movie_id=movie_id).all()
-    result = [comment.export_data() for comment in comments]
+    comments = db.session.query(User, Comment). \
+        filter(Comment.user_id == User.user_id). \
+        filter(Comment.movie_id == movie_id). \
+        order_by(Comment.date_time.desc()).all()
+    result = Comment.export_data(comments)
     return jsonify({"comments": result}), 200
 
 
