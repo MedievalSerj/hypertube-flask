@@ -10,13 +10,12 @@ class Movie(db.Model):
     year = db.Column(db.String(16))
     rating = db.Column(db.Integer)
     photo_url = db.Column(db.String(256))
-    movie_url = db.Column(db.String(256))
-    subtitles_url = db.Column(db.String(256))
     genre = db.Column(db.String(256))
-    producer = db.Column(db.String(64))
     director = db.Column(db.String(64))
     actors = db.Column(db.String(256))
-    country = db.Column(db.String(128))
+    description = db.Column(db.Text)
+    magnet_720 = db.Column(db.String(512))
+    magnet_1080 = db.Column(db.String(512))
     
     def import_data(self, data):
         try:
@@ -37,8 +36,12 @@ class Movie(db.Model):
             'year': self.year,
             'rating': self.rating,
             'photo_url': self.photo_url,
-            'self_url': self.get_self_url(),
-            'genre': self.genre
+            'genre': self.genre,
+            'director': self.director,
+            'actors': self.actors,
+            'description': self.description,
+            'magnet_720': self.magnet_720,
+            'magnet_1080': self.magnet_1080
         }
     
     def get_watch_item(self):
@@ -48,12 +51,7 @@ class Movie(db.Model):
             'year': self.year,
             'rating': self.rating,
             'photo_url': self.photo_url,
-            'movie_url': self.movie_url,
-            'subtitles_url': self.subtitles_url,
-            'self_url': self.get_self_url(),
             'genre': self.genre,
-            'producer': self.producer,
             'director': self.director,
             'actors': self.actors,
-            'country': self.country
         }

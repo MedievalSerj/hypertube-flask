@@ -39,13 +39,12 @@ if __name__ == '__main__':
                 'year': 1968,
                 'rating': 7,
                 'photo_url': 'http://localhost:5000/static/movies/movie_1/movie_1.png',
-                'movie_url': '/static/movies/movie_1/movie_1.mkv',
-                'subtitles_url': '/static/movies/movie_1/movie_1.srt',
                 'genre': 'Drama',
-                'producer': 'Don Jownes',
                 'director': 'Big Boss',
                 'actors': 'Robin Wiliams, Robin Good',
-                'country': 'Paragvay'
+                'description': 'story about an old fucked-up man and his dog...',
+                'magnet_720': '37A523D93E34DA6897D80710A5764268E19A8A8F',
+                'magnet_1080': '37A523D93E34DA6897D80710A5764268E19A8A8F'
             })
             movies.append({
                 'id': 34,
@@ -53,13 +52,12 @@ if __name__ == '__main__':
                 'year': 2008,
                 'rating': 6,
                 'photo_url': 'http://localhost:5000/static/movies/movie_2/movie_2.png',
-                'movie_url': '/static/movies/movie_2/movie_2.mkv',
-                'subtitles_url': '/static/movies/movie_2/movie_2.srt',
                 'genre': 'Comedy',
-                'producer': 'Don Jownes',
                 'director': 'Big Boss',
                 'actors': 'Robin Wiliams, Robin Good',
-                'country': 'Paragvay'
+                'description': 'story about an old fucked-up man and his dog...',
+                'magnet_720': '37A523D93E34DA6897D80710A5764268E19A8A8F',
+                'magnet_1080': '37A523D93E34DA6897D80710A5764268E19A8A8F'
             })
             movies.append({
                 'id': 21,
@@ -67,13 +65,12 @@ if __name__ == '__main__':
                 'year': 2017,
                 'rating': 5,
                 'photo_url': 'http://localhost:5000/static/movies/movie_3/movie_3.png',
-                'movie_url': '/static/movies/movie_3/movie_3.mkv',
-                'subtitles_url': '/static/movies/movie_3/movie_3.srt',
                 'genre': 'Thriller',
-                'producer': 'Don Jownes',
                 'director': 'Big Boss',
                 'actors': 'Robin Wiliams, Robin Good',
-                'country': 'Paragvay'
+                'description': 'story about an old fucked-up man and his dog...',
+                'magnet_720': '37A523D93E34DA6897D80710A5764268E19A8A8F',
+                'magnet_1080': '37A523D93E34DA6897D80710A5764268E19A8A8F'
             })
             movies.append({
                 'id': 67,
@@ -81,13 +78,12 @@ if __name__ == '__main__':
                 'year': 2013,
                 'rating': 8,
                 'photo_url': 'http://localhost:5000/static/movies/movie_4/movie_4.jpg',
-                'movie_url': '/static/movies/movie_4/movie_4.mkv',
-                'subtitles_url': '/static/movies/movie_4/movie_4.srt',
                 'genre': 'Drama, Documentary',
-                'producer': 'Don Jownes',
                 'director': 'Big Boss',
                 'actors': 'Robin Wiliams, Robin Good',
-                'country': 'Paragvay'
+                'description': 'story about an old fucked-up man and his dog...',
+                'magnet_720': '37A523D93E34DA6897D80710A5764268E19A8A8F',
+                'magnet_1080': '37A523D93E34DA6897D80710A5764268E19A8A8F'
             })
             movies.append({
                 'id': 42,
@@ -95,13 +91,12 @@ if __name__ == '__main__':
                 'year': 2016,
                 'rating': 3,
                 'photo_url': 'http://localhost:5000/static/movies/movie_5/movie_5.png',
-                'movie_url': '/static/movies/movie_5/movie_5.mkv',
-                'subtitles_url': '/static/movies/movie_5/movie_5.srt',
                 'genre': 'Historical',
-                'producer': 'Don Jownes',
                 'director': 'Big Boss',
                 'actors': 'Robin Wiliams, Robin Good',
-                'country': 'Paragvay'
+                'description': 'story about an old fucked-up man and his dog...',
+                'magnet_720': '37A523D93E34DA6897D80710A5764268E19A8A8F',
+                'magnet_1080': '37A523D93E34DA6897D80710A5764268E19A8A8F'
             })
             movies.append({
                 'id': 98,
@@ -109,13 +104,12 @@ if __name__ == '__main__':
                 'year': 2001,
                 'rating': 5,
                 'photo_url': 'http://localhost:5000/static/movies/movie_6/movie_6.jpg',
-                'movie_url': '/static/movies/movie_6/movie_6.mkv',
-                'subtitles_url': '/static/movies/movie_6/movie_6.srt',
                 'genre': 'Action',
-                'producer': 'Don Jownes',
                 'director': 'Big Boss',
                 'actors': 'Robin Wiliams, Robin Good',
-                'country': 'Paragvay'
+                'description': 'story about an old fucked-up man and his dog...',
+                'magnet_720': '37A523D93E34DA6897D80710A5764268E19A8A8F',
+                'magnet_1080': '37A523D93E34DA6897D80710A5764268E19A8A8F'
             })
             movies.append({
                 'id': 71,
@@ -123,13 +117,12 @@ if __name__ == '__main__':
                 'year': 1999,
                 'rating': 4,
                 'photo_url': 'http://localhost:5000/static/movies/movie_7/movie_7.jpg',
-                'movie_url': '/static/movies/movie_7/movie_7.mkv',
-                'subtitles_url': '/static/movies/movie_7/movie_7.srt',
                 'genre': 'Drama',
-                'producer': 'Don Jownes',
                 'director': 'Big Boss',
                 'actors': 'Robin Wiliams, Robin Good',
-                'country': 'Paragvay'
+                'description': 'story about an old fucked-up man and his dog...',
+                'magnet_720': '37A523D93E34DA6897D80710A5764268E19A8A8F',
+                'magnet_1080': '37A523D93E34DA6897D80710A5764268E19A8A8F'
             })
             for movie in movies:
                 movie_object = Movie()
