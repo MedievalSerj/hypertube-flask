@@ -1,5 +1,5 @@
 import os
-import datetime
+from datetime import datetime
 from flask import url_for, current_app, abort
 from flask_mail import Message
 from werkzeug.security import generate_password_hash
@@ -15,7 +15,6 @@ from urllib import request, parse
 from json import loads
 import string
 import random
-import requests
 from pprint import pprint
 
 
@@ -35,7 +34,7 @@ class User(db.Model):
     last_name = db.Column(db.String(128))
     registration_token = db.Column(db.String(128))
     activated = db.Column(db.Integer, default=0)
-    join_date = db.Column(db.DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+    join_date = db.Column(db.Integer, default=datetime.utcnow().timestamp())
     watched_movies = db.relationship('WatchedMovie', backref=db.backref('user', lazy='joined'), lazy='dynamic',
                                      cascade='all, delete-orphan')
     comments = db.relationship('Comment', backref=db.backref('user', lazy='joined'), lazy='dynamic',
@@ -55,7 +54,7 @@ class User(db.Model):
             'avatar_url': self.avatar_url,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'join_date': self.join_date.isoformat() + 'Z',
+            'join_date': self.join_date,
             'watched_movies': url_for('user_controllers.get_watched_movies', user_id=self.user_id, _external=True),
             'language': self.language
         }

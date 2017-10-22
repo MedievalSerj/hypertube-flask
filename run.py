@@ -28,6 +28,7 @@ if __name__ == '__main__':
               'avatar64': None
             }
             user.import_data(data)
+            user.activated = 1
             db.session.add(user)
             db.session.commit()
             user.create_userfolder()

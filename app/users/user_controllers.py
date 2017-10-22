@@ -43,6 +43,7 @@ def oauth42(code):
         db.session.flush()
         user.create_userfolder()
         user.download_save_42_photo(image_url)
+        user.activated = 1
         db.session.commit()
         user.send_42_registration_email(data['passwd'])
     token = user.get_token()
@@ -71,6 +72,7 @@ def oauth_google():
         db.session.flush()
         user.create_userfolder()
         user.download_save_42_photo(image_url)
+        user.activated = 1
         db.session.commit()
         user.send_42_registration_email(data['passwd'])
     token = user.get_token()
@@ -96,6 +98,8 @@ def auth():
         abort(400)
     if not check_password_hash(user.passwd, data['passwd']):
         abort(400)
+    if user.activated == 0:
+        abort(401)
     token = user.get_token()
     return jsonify({'token': token}), 200
 
