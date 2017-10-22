@@ -22,6 +22,7 @@ from pprint import pprint
 class User(db.Model):
     __tablename__ = 'users'
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    language = db.Column(db.String(2), default='en')
     user42_id = db.Column(db.Integer)
     google_user_id = db.Column(db.Integer)
     login = db.Column(db.String(128), unique=True)
@@ -55,7 +56,8 @@ class User(db.Model):
             'first_name': self.first_name,
             'last_name': self.last_name,
             'join_date': self.join_date.isoformat() + 'Z',
-            'watched_movies': url_for('user_controllers.get_watched_movies', user_id=self.user_id, _external=True)
+            'watched_movies': url_for('user_controllers.get_watched_movies', user_id=self.user_id, _external=True),
+            'language': self.language
         }
     
     def import_data(self, data):

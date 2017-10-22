@@ -100,6 +100,27 @@ def auth():
     return jsonify({'token': token}), 200
 
 
+@users_blueprint.route('/language/<int:user_id>', methods=['PATCH'])
+def set_language(user_id):
+    user = User.query.get_or_404(user_id)
+    if not request.json:
+        abort(400)
+    params = request.json
+    if 'language' not in params:
+        abort(400)
+    if params['language'] != 'en' and params['language'] != 'ru':
+        abort(400)
+    user.language = request.json['language']
+    db.session.commit()
+    return jsonify({})
+
+
+@users_blueprint.route('/language/<int:user_id>', methods=['GET'])
+def get_language(user_id):
+    user = User.query.get_or_404(user_id)
+    return jsonify({'language': user.language})
+
+
 @users_blueprint.route('/confirm_email/<string:login>/<string:token>', methods=['GET'])
 def confirm_email(login, token):
     user = User.query.filter_by(login=login, registration_token=token).first()
