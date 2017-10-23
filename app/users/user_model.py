@@ -15,7 +15,6 @@ from urllib import request, parse
 from json import loads
 import string
 import random
-from pprint import pprint
 
 
 class User(db.Model):
@@ -26,7 +25,7 @@ class User(db.Model):
     google_user_id = db.Column(db.Integer)
     login = db.Column(db.String(128), unique=True)
     #add unique after debug
-    email = db.Column(db.String(128))
+    email = db.Column(db.String(128), unique=True)
     jwt = db.Column(db.String)
     avatar_url = db.Column(db.String(256))
     passwd = db.Column(db.String(256))
@@ -96,9 +95,8 @@ class User(db.Model):
     
     def exists(self):
         login_exists = User.query.filter_by(login=self.login).first()
-        # email_exists = User.query.filter_by(email=self.email).first()
-        # if login_exists or email_exists:
-        if login_exists:
+        email_exists = User.query.filter_by(email=self.email).first()
+        if login_exists or email_exists:
             return True
         return False
     
@@ -145,24 +143,27 @@ class User(db.Model):
         self.registration_token = token
         mail.send(msg)
 
-    def send_reset_email(self, email):
+    @staticmethod
+    def send_reset_email(email):
+        user = User.query.filter_by(email=email).first()
+        if user is None:
+            abort(404)
         token = str(uuid.uuid4())
         subject = 'Hypertube reset email'
         sender = 'http://localhost:4200/'
         recipient = email
-        body = '''Please follow the next !
-                \n\nPlease follow the link to finish registration:
+        body = '''Please follow the link to finish registration:
                 \n{0}'''.format(current_app.config['NG_ADDRESS']
                                 + '/sign-in/?confirmed=true&token=' +
                                 token +
                                 '&login=' +
-                                self.login)
+                                user.login)
         msg = Message(sender=sender,
                       recipients=[recipient],
                       subject=subject,
                       body=body
                       )
-        self.registration_token = token
+        user.registration_token = token
         mail.send(msg)
     
     def get_token(self):
@@ -178,7 +179,6 @@ class User(db.Model):
     
     @staticmethod
     def get42_token(code):
-        # print('code: ' + code)
         data = {
             'grant_type': 'authorization_code',
             'client_id': '135caaea196569df717378f2950cfb4833e1a936d8c3c4a5f56f57fbec6935a4',
@@ -284,3 +284,7 @@ class User(db.Model):
     @staticmethod
     def get_user_by_google_id_or_none(google_user_id):
         return User.query.filter_by(google_user_id=google_user_id).first()
+    
+    @staticmethod
+    def get_user_by_email_or_none(email):
+        return User.query.filter_by(email=email).first()
