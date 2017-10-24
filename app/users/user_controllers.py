@@ -93,8 +93,27 @@ def reset_email():
     data = request.json
     if 'email' not in data:
         abort(400)
+    user = User.get_user_by_email_or_none(data['email'])
+    if user is None or user.activated == 0:
+        abort(400)
     User.send_reset_email(data['email'])
+    db.session.commit()
     return jsonify({}), 200
+
+
+@users_blueprint.route('/reset/<string:email>', methods=['PATCH'])
+def set_new_passwd(email):
+    user = User.query.filter_by(email=email).first()
+    if user is None:
+        abort(404)
+    if user.registration_token != request.json['token']:
+        abort(400)
+    data = dict()
+    data['passwd'] = request.json['passwd']
+    user.modify_data(data)
+    db.session.commit()
+    token = user.get_token()
+    return jsonify({'token': token}), 200
     
 
 @users_blueprint.route('/auth', methods=['POST'])

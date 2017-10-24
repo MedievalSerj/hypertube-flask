@@ -152,12 +152,12 @@ class User(db.Model):
         subject = 'Hypertube reset email'
         sender = 'http://localhost:4200/'
         recipient = email
-        body = '''Please follow the link to finish registration:
+        body = '''Please follow the next link to reset password:
                 \n{0}'''.format(current_app.config['NG_ADDRESS']
-                                + '/sign-in/?confirmed=true&token=' +
+                                + '/create_new_password/?token=' +
                                 token +
-                                '&login=' +
-                                user.login)
+                                '&email=' +
+                                email)
         msg = Message(sender=sender,
                       recipients=[recipient],
                       subject=subject,
