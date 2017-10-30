@@ -178,12 +178,12 @@ class User(db.Model):
                           current_app.config['JWT_ALGORITHM'])
     
     @staticmethod
-    def get42_token(code):
+    def get42_token(code, redirect_uri):
         data = {
             'grant_type': 'authorization_code',
             'client_id': '135caaea196569df717378f2950cfb4833e1a936d8c3c4a5f56f57fbec6935a4',
             'client_secret': 'b26e81d39a962c5304b0f8642cf670eab074893794faa08285a92d3e7eaebdad',
-            'redirect_uri': 'http://localhost:4200/oauth42',
+            'redirect_uri': redirect_uri,
             'code': code,
         }
         encoded_data = parse.urlencode(data).encode()
@@ -253,12 +253,12 @@ class User(db.Model):
         mail.send(msg)
 
     @staticmethod
-    def get_google_token(code):
+    def get_google_token(code, redirect_uri):
         data = {
             'grant_type': 'authorization_code',
             'client_id': '248773064708-bqnk5a6iq0lsa274bdcf5ije21lmqi5p.apps.googleusercontent.com',
             'client_secret': 'Mqqwr9bM6fGnrE_evdDhEUXQ',
-            'redirect_uri': 'http://localhost:4200/oauth-google',
+            'redirect_uri': redirect_uri,
             'code': code,
         }
         encoded_data = parse.urlencode(data).encode()

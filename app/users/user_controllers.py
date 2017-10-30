@@ -23,9 +23,11 @@ def auth_required(f):
     return decorated_function
 
 
-@users_blueprint.route('/oauth42/<string:code>', methods=['GET'])
-def oauth42(code):
-    token_42 = User.get42_token(code)
+@users_blueprint.route('/oauth42', methods=['POST'])
+def oauth42():
+    code = request.json['code']
+    redirect_uri = request.json['redirect_uri']
+    token_42 = User.get42_token(code, redirect_uri)
     user42 = User.get42_user(token_42)
     data = dict()
     data['email'] = user42['email']
@@ -58,7 +60,8 @@ def oauth42(code):
 @users_blueprint.route('/oauth-google', methods=['POST'])
 def oauth_google():
     code = request.json['code']
-    token = User.get_google_token(code)
+    redirect_uri = request.json['redirect_uri']
+    token = User.get_google_token(code, redirect_uri)
     google_user = User.get_google_user(token)
     data = dict()
     data['google_user_id'] = google_user['id']

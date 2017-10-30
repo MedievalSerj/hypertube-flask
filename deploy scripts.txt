@@ -1,0 +1,14 @@
+
+# create folder for log files
+sudo mkdir /var/log/hypertube
+
+# copy supervisor configuration
+sudo cp hypertube-flask.conf /etc/supervisor/conf.d
+sudo supervisorctl reread
+
+# configure nginx
+sudo cp /home/serj/repo/hypertube-flask/hypertube.nginx /etc/nginx/sites-available/hypertube
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo rm -f /etc/nginx/sites-enabled/hypertube
+sudo ln -s /etc/nginx/sites-available/hypertube /etc/nginx/sites-enabled/
+sudo service nginx restart

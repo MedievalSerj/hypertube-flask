@@ -10,13 +10,15 @@ NG_ADDRESS = 'http://localhost:4200'
 ROOT_DIRECTORY = os.getcwd()
 APP_DIRECTORY = app_dir
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + db_path
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 UPLOAD_FOLDER = upload_folder
 SECRET_KEY = 'wilhelm-marduk'
 JWT_ALGORITHM = 'HS256'
-DEBUG = True
+DEBUG = False
 MAIL_SERVER = 'smtp.gmail.com'
 MAIL_PORT = 587
 MAIL_USE_TLS = True
 MAIL_USE_SSL = False
 MAIL_USERNAME = 'ladonya.s@gmail.com'
 MAIL_PASSWORD = os.environ.get('G_PASSWD')
+

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 from app import create_app
 from app import db
 import os
@@ -6,13 +7,15 @@ import sys
 from app.users.user_model import User
 from app.movies.movie_model import Movie
 
+# if len(sys.argv) > 1:
+#     cfg = sys.argv[1]
+# else:
+cfg = 'development'
+app = create_app(cfg)
+
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        cfg = sys.argv[1]
-    else:
-        cfg = 'development'
-    app = create_app(cfg)
+
     if not os.path.exists('./app/static/users'):
         os.mkdir('./app/static/users')
     with app.app_context():
@@ -130,4 +133,4 @@ if __name__ == '__main__':
                 movie_object.import_data(movie)
                 db.session.add(movie_object)
                 db.session.commit()
-    app.run(threaded=True)
+    app.run(threaded=True, debug=True)
