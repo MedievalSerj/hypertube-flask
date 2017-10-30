@@ -133,4 +133,4 @@ if __name__ == '__main__':
                 movie_object.import_data(movie)
                 db.session.add(movie_object)
                 db.session.commit()
-    app.run(threaded=True, debug=True)
+    app.run(threaded=True)
