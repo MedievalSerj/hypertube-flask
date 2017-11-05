@@ -8,8 +8,6 @@ from werkzeug.security import check_password_hash
 import jwt
 from functools import wraps
 
-from pprint import pprint
-
 
 def auth_required(f):
     @wraps(f)
@@ -99,7 +97,8 @@ def reset_email():
     user = User.get_user_by_email_or_none(data['email'])
     if user is None or user.activated == 0:
         abort(400)
-    User.send_reset_email(data['email'])
+    lang = user.language
+    User.send_reset_email(data['email'], lang)
     db.session.commit()
     return jsonify({}), 200
 
@@ -205,8 +204,8 @@ def email_exists(email):
     return jsonify({'email_exists': exists})
 
 
-@auth_required
 @users_blueprint.route('/user/<int:user_id>', methods=['DELETE'])
+@auth_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     user.remove_userfolder()
@@ -215,22 +214,19 @@ def delete_user(user_id):
     return jsonify({})
 
 
-@auth_required
 @users_blueprint.route('/user/<int:user_id>', methods=['PATCH'])
+@auth_required
 def modify_user(user_id):
     user = User.query.get_or_404(user_id)
     data = request.json
-    #
-    # print(data)
-    #
     user.modify_data(data)
     db.session.commit()
     token = user.get_token()
     return jsonify({'token': token})
 
 
-@auth_required
 @users_blueprint.route('/user/<int:user_id>', methods=['GET'])
+@auth_required
 def get_user(user_id):
     user = User.query.get_or_404(user_id)
     return jsonify(user.export_data())
@@ -239,8 +235,8 @@ def get_user(user_id):
 # COMMENT ROUTES
 
 
-@auth_required
 @users_blueprint.route('/comments/<int:movie_id>', methods=['GET'])
+@auth_required
 def get_all_comments(movie_id):
     comments = db.session.query(User, Comment). \
         filter(Comment.user_id == User.user_id). \
@@ -250,8 +246,8 @@ def get_all_comments(movie_id):
     return jsonify({"comments": result}), 200
 
 
-@auth_required
 @users_blueprint.route('/comments', methods=['POST'])
+@auth_required
 def post_comment():
     comment = Comment()
     comment.import_data(request.json)
@@ -263,12 +259,11 @@ def post_comment():
 # WATCHED MOVIES ROUTES
 
 
-@auth_required
 @users_blueprint.route('/watched_movies', methods=['POST'])
+@auth_required
 def add_watched_movie():
     data = request.json
     watched_movie = WatchedMovie.query.filter_by(user_id=data['user_id'], movie_id=data['movie_id']).first()
-    print('watched_movie = ' + str(watched_movie))
     if watched_movie is None:
         watched_movie = WatchedMovie()
         watched_movie.import_data(request.json)
@@ -277,16 +272,16 @@ def add_watched_movie():
     return jsonify({}), 201
 
 
-@auth_required
 @users_blueprint.route('/watched_movies/<int:user_id>', methods=['GET'])
+@auth_required
 def get_watched_movies(user_id):
     watched_movies = WatchedMovie.query.filter_by(user_id=user_id).all()
     result = [movie.export_data() for movie in watched_movies]
     return jsonify(result), 200
 
 
-@auth_required
 @users_blueprint.route('/is_watched/<int:user_id>/<int:movie_id>', methods=['GET'])
+@auth_required
 def is_watched(user_id, movie_id):
     movie = WatchedMovie.query.filter_by(user_id=user_id, movie_id=movie_id).first()
     if movie is None:

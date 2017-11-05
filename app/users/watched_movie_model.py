@@ -6,7 +6,7 @@ from app import db
 
 class WatchedMovie(db.Model):
     __tablename__ = 'watched_movies'
-    movie_id = db.Column(db.Integer)
+    movie_id = db.Column(db.String)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), index=True)
     __table_args__ = (PrimaryKeyConstraint('movie_id', 'user_id', name='watched_movies_pk'),
                       {})

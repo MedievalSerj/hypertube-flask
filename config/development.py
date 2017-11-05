@@ -6,7 +6,8 @@ db_path = os.path.join(basedir, 'data.sqlite')
 upload_folder = os.path.join(basedir, 'app', 'static', 'users')
 
 
-NG_ADDRESS = 'http://localhost:4200'
+NG_ADDRESS = 'http://10.113.2.8:4300'
+NG_ADDRESS_RU = 'http://10.113.2.8:4200'
 ROOT_DIRECTORY = os.getcwd()
 APP_DIRECTORY = app_dir
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + db_path
@@ -19,6 +20,5 @@ MAIL_SERVER = 'smtp.gmail.com'
 MAIL_PORT = 587
 MAIL_USE_TLS = True
 MAIL_USE_SSL = False
-MAIL_USERNAME = 'ladonya.s@gmail.com'
-MAIL_PASSWORD = os.environ.get('G_PASSWD')
-
+MAIL_USERNAME = 'hyper42tube@gmail.com'
+MAIL_PASSWORD = '3121712Sl'

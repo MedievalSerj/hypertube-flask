@@ -28,7 +28,7 @@ def create_app(config_name):
     from .movies import movies_blueprint
     
     app.register_blueprint(users_blueprint)
-    app.register_blueprint(movies_blueprint)
+    # app.register_blueprint(movies_blueprint)
     
     return app
 
