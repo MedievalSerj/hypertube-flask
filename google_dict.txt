@@ -1,9 +1,0 @@
-{'email': 'ladonya.s@gmail.com',
- 'family_name': '.',
- 'given_name': 'ladonyas',
- 'id': '115890072249388346781',
- 'link': 'https://plus.google.com/115890072249388346781',
- 'locale': 'ru',
- 'name': 'ladonyas',
- 'picture': 'https://lh4.googleusercontent.com/-oevJs_t1f1M/AAAAAAAAAAI/AAAAAAAAB5M/PeR0bVoo5QA/photo.jpg',
- 'verified_email': True}

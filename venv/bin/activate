@@ -34,10 +34,10 @@ deactivate () {
     fi
 }
 
-# unset irrelevant variables
+# unset irrelavent variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Volumes/external/hypertube/hypertube-flask/venv"
+VIRTUAL_ENV="/home/serj/repo2/hypertube-flask/venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
